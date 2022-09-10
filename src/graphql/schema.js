@@ -14,14 +14,13 @@ const ArticleType = new GraphQLObjectType({
     name: 'Article',
     description: 'This represents an article uploaded by a contributor',
     fields: () => ({
-        id: { type: new GraphQLNonNull(GraphQLID) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         topic: { type: GraphQLString },
         date: { type: new GraphQLNonNull(GraphQLString) },
         contributorId: { type: new GraphQLNonNull(GraphQLID) },
         contributor: {
             type: new GraphQLNonNull(ContributorType),
-            resolve: (parent, args) => Contributor.findById(parent.contributorId)
+            resolve: (parent, args) => Contributor.findOne({ iid: parent.contributorId })
         }
     })
 })
@@ -30,13 +29,13 @@ const ContributorType = new GraphQLObjectType({
     name: 'Contributor',
     description: 'This represents a contributor of an article',
     fields: () => ({
-        id: { type: new GraphQLNonNull(GraphQLID) },
+        iid: { type: new GraphQLNonNull(GraphQLID) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         url: { type: GraphQLString },
         major: { type: new GraphQLNonNull(GraphQLString) },
         articles: {
             type: new GraphQLList(ArticleType),
-            resolve: (parent, args) => Article.find({ contributorId: parent.id })
+            resolve: (parent, args) => Article.find({ contributorId: parent.iid })
         }
     })
 })
@@ -104,6 +103,7 @@ const RootMutationType = new GraphQLObjectType({
                 name: { type: new GraphQLNonNull(GraphQLString) },
                 url: { type: GraphQLString },
                 major: { type: new GraphQLNonNull(GraphQLString) },
+                iid: { type: new GraphQLNonNull(GraphQLString) }
             },
             resolve: (parent, args) => {
                 const contributor = new Contributor({ ...args })

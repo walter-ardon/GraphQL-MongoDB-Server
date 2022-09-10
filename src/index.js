@@ -4,6 +4,7 @@ const { graphqlHTTP } = require('express-graphql')
 const { MongoMemoryServer } = require('mongodb-memory-server')
 const mongoose = require('mongoose')
 const schema = require('./graphql/schema')
+const initDB = require('./models/initDB')
 
 
 // configure app
@@ -21,6 +22,7 @@ const connectMongoDB = async () => {
     mongoose.connection.once('open', () => {
         console.log('Connected to MongoDB')
     })
+    initDB()
 }
 
 connectMongoDB()
