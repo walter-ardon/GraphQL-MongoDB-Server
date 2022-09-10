@@ -6,7 +6,8 @@ const {
     GraphQLID,
     GraphQLList
 } = require('graphql')
-const { articles, contributors } = require('../models/data')
+const Article = require('../models/article')
+const Contributor = require('../models/contributor')
 
 
 const ArticleType = new GraphQLObjectType({
@@ -20,7 +21,7 @@ const ArticleType = new GraphQLObjectType({
         contributorId: { type: new GraphQLNonNull(GraphQLID) },
         contributor: {
             type: new GraphQLNonNull(ContributorType),
-            resolve: (article) => contributors.find(contributor => contributor.id === article.contributorId)
+            resolve: (parent, args) => Contributor.findById(parent.contributorId)
         }
     })
 })
@@ -35,7 +36,7 @@ const ContributorType = new GraphQLObjectType({
         major: { type: new GraphQLNonNull(GraphQLString) },
         articles: {
             type: new GraphQLList(ArticleType),
-            resolve: (contributor) => articles.filter(article => article.contributorId === contributor.id)
+            resolve: (parent, args) => Article.find({ contributorId: parent.id })
         }
     })
 })
@@ -55,12 +56,12 @@ const RootQueryType = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
-            resolve: (parent, args) => articles.find(article => article.contributorId === args.id)
+            resolve: (parent, args) => Article.findById(args.id)
         },
         articles: {
             type: new GraphQLList(ArticleType),
             description: 'List of Articles',
-            resolve: () => articles
+            resolve: () => Article.find({})
         },
         contributor: {
             type: new GraphQLNonNull(ContributorType),
@@ -68,12 +69,12 @@ const RootQueryType = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
-            resolve: (parent, args) => contributors.find(contributor => contributor.id === args.id)
+            resolve: (parent, args) => Contributor.findById(args.id)
         },
         contributors: {
             type: new GraphQLList(ContributorType),
             description: 'List of Contributor',
-            resolve: () => contributors
+            resolve: () => Contributor.find({})
         }
     })
 })
@@ -92,9 +93,8 @@ const RootMutationType = new GraphQLObjectType({
                 contributorId: { type: new GraphQLNonNull(GraphQLID) },
             },
             resolve: (parent, args) => {
-                const article = { id: articles.length + 1, ...args}
-                articles.push(article)
-                return article
+                const article = new Article({ ...args })
+                return article.save()
             }
         },
         addContributor: {
@@ -106,9 +106,8 @@ const RootMutationType = new GraphQLObjectType({
                 major: { type: new GraphQLNonNull(GraphQLString) },
             },
             resolve: (parent, args) => {
-                const contributor = { id: contributors.length + 1, ...args }
-                contributors.push(contributor)
-                return contributor
+                const contributor = new Contributor({ ...args })
+                return contributor.save()
             }
         }
     })
